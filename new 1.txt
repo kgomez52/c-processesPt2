@@ -1,0 +1,74 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+int main(){
+
+        /* child process */
+        int cid;
+
+        /* string that holds user input to tokenize */
+        char buffer[1024];
+
+        /* path for child process */
+        char *path = "./fun";
+
+        /* array that holds user input after tokenizing */
+        char *args[1024];
+
+        /* var that increments to store tokens in array above */
+        int i = 0;
+
+        /* string to exit the shell */
+        char strexit[] = "exit";
+
+        /* pointer used for string tokenizer */
+        char *str;
+
+        /* delimiter for string tokenizer */
+        char delimit[] = " \t\r\n\v\f";
+
+        /* var that keeps the shell running when equal to 1. At 0 the shell exits */
+        int shouldrun = 1;
+		
+		while(shouldrun != 0){
+            printf("krgomez> ");
+
+            /* getting user input */
+            if(fgets(buffer, 1024, stdin) == NULL){
+                fprintf(stderr, "fgets failed\n");
+                exit(1);
+                }
+
+            /* string tokenizer to break apart input and store tokens in array */
+            for(str = strtok(buffer, delimit); str != NULL; str = strtok(NULL, delimit)){
+                if(strncmp(str, strexit, 4) == 0){
+                    shouldrun = 0;
+                    exit(1);
+                }else{
+                    args[i] = str;
+                    //i += 1;
+                    //printf("%s\n", args[i]);
+                    i += 1;
+                }
+            }
+
+            /*creaitng child process */
+            cid = fork();
+
+            if(cid < 0){ /* error occured during fork() */
+                fprintf(stderr, "Fork Failed\n");
+            }
+            else if(cid == 0){ /* child process */
+                if(execlp(path, "fun", args, NULL) == -1){
+                    fprintf(stderr, "exec failed\n");
+                }
+            }
+            else{ /* parent process */
+                wait(NULL);
+            }
+        }
+        return 0;
+}
